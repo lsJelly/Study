@@ -1,0 +1,77 @@
+背景：我们需要在我们对象实现的方法新增功能，如我们需要知道运行某些方法所需要的时间，需要在方法运行前打印相关日志，我们能够怎么实现呢
+一：在调用该方法前获取开始时间，方法执行完后获取结束时间
+二：使用继承，重写方法，在方法前后补加操作
+三：使用聚合方法，在类中将该对象作为成员变量，同样的方法会调用该对象的方法，前后补加操作
+例子：
+实现一个tank类，tank类有两个方法，run和stop 我们需要知道run和stop运行的时间，假设在我们不知道源码的情况下去得到，我们需要在运行这两个方法前去分别打印
+开始和结束日志
+我们一般都会使用到多态，所以tank是实现了一个接口
+package com.mytestfan.proxy;
+
+public interface Moveable {
+	void run();
+}
+
+package com.mytestfan.proxy;
+
+public class Tank implements Moveable {
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		System.out.println("tank running....");
+		
+	}
+	
+}	
+
+第一种方式我们用继承来实现
+package com.mytestfan.proxy;
+
+public class TankTimeProxy extends Tank{
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		long start = System.currentTimeMillis();
+		super.run();
+		System.out.println("cost time :" + (System.currentTimeMillis() - start));
+	}
+}
+
+我们在测试类中用proxy对象来执行run就可以得到我们想要的结果。
+
+第二种方式：
+将我们运行的对象传给proxy对象，proxy对象对run方法啥的进行进一步封装
+package com.mytestfan.proxy;
+
+public class TankTimerProxyC implements Moveable {
+	Moveable tank;
+	TankTimerProxyC(Moveable tank){
+		this.tank = tank;
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		long start = System.currentTimeMillis();
+		tank.run();
+		System.out.println("cost time c: " + (System.currentTimeMillis() - start));
+		
+	}
+	
+	
+}
+因为这里我们还是以多态思想来主动，所以能往上一层抽象就往上一层抽象。
+
+现在我们来比较一下这两种实现方式的优劣
+1、继承方式不够灵活，如果我现在有另一个需求要在run方法前后打印日志，而这个操作我不确定是在计算时间操作的前还是后，如果要满足这个需求我要做的操作是
+一：在timeproxy的基础上又继承一个，在调用timeproxy.run方法前后分别加入日志打印，如果我首先需要操作的是日志打印，这时候就得首先在tank的基础上实现一个
+log的proxy，然后又实现一个在logproxy基础上的timeproxy，到最后如果对象多，方法多，需求多，就会造成类爆炸，那看看第二种方法
+2、我们将对象封装在一个proxy对象中，这个proxy还是实现了最初的对象的接口，所以你可以在代理中传入代理对象，如果说tank有个timeproxy的代理类和logproxy，
+如果我先想让tank方法执行timeproxy的操作，这时候你可以将tank对象传给timeproxy对象，如果在这基础上你又想加入logproxy的操作，你就把timeproxy对象给log
+proxy，这时候logproxy会在timeproxy的基础上进一步执行，因为这两个proxy对象和tank对象是实现了同一个接口。
+
+接下来的需求，
+如我们需要在所有方法前都加入打印日志操作，如果对每个对象的方法，执行上述操作肯定是不合理的
+并且还需要这个操作能适用不同类型的对象
+下一篇揭晓。。。。
